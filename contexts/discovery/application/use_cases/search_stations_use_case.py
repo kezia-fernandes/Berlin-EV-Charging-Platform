@@ -3,6 +3,7 @@ from typing import List
 from ...domain.entities.operational_station import OperationalStation
 from ...domain.repositories.i_station_repository import IStationRepository
 from contexts.shared_kernel.common.station_id import StationId
+from contexts.shared_kernel.common.postal_code import PostalCode  # ← ADD THIS
 
 
 class SearchStationsUseCase:
@@ -13,16 +14,11 @@ class SearchStationsUseCase:
     
     def execute_by_postal_code(self, postal_code: str) -> List[OperationalStation]:
         """Search stations by postal code"""
-        if not postal_code or not postal_code.strip():
-            raise ValueError("Postal code cannot be empty")
+        # PostalCode value object handles all validation
+        postal_code_vo = PostalCode(postal_code)
         
-        if not postal_code.isdigit() or len(postal_code) != 5:
-            raise ValueError("Invalid postal code format")
-        
-        if not postal_code.startswith('1'):
-            raise ValueError("Must be a Berlin postal code")
-        
-        return self._repository.find_by_postal_code(postal_code)
+        # Use the validated value
+        return self._repository.find_by_postal_code(postal_code_vo.value)
     
     def execute_by_id(self, station_id: str) -> OperationalStation:
         """Get specific station by ID"""

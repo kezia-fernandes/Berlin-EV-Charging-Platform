@@ -22,6 +22,12 @@ from contexts.reporting.infrastructure.repositories.in_memory_report_repository 
 from contexts.reporting.domain.enums.malfunction_type import MalfunctionType
 from contexts.reporting.domain.enums.report_status import ReportStatus
 
+# Reporting Application Layer (Use Cases & DTOs)
+from contexts.reporting.application.use_cases.create_malfunction_report_use_case import CreateMalfunctionReportUseCase
+from contexts.reporting.application.use_cases.resolve_malfunction_use_case import ResolveMalfunctionUseCase
+from contexts.reporting.application.dtos.create_report_dto import CreateReportRequest
+from contexts.reporting.application.dtos.resolve_report_dto import ResolveReportRequest
+
 # Shared
 from contexts.shared_kernel.common.station_id import StationId
 
@@ -103,285 +109,265 @@ if page == "🔍 Search Stations":
     with col2:
         search_button = st.button("🔍 Search", use_container_width=True, type="primary")
     
-    # Validation
+    # Search using Use Case (handles validation via PostalCode value object)
     if search_button:
         if not postal_code:
             st.error("❌ Please enter a postal code")
-        elif not postal_code.isdigit() or len(postal_code) != 5:
-            st.error("❌ Invalid postal code format (must be 5 digits)")
-        elif not postal_code.startswith('1'):
-            st.error("❌ Please enter a Berlin postal code (starts with 1)")
         else:
-            # Search stations
-            stations = station_repo.find_by_postal_code(postal_code)
-            
-            if not stations:
-                st.warning(f"⚠️ No charging stations found in postal code {postal_code}")
-            else:
-                st.success(f"✅ Found {len(stations)} charging station(s) in {postal_code}")
+            try:
+                # Use the SearchStationsUseCase (proper DDD architecture)
+                search_use_case = SearchStationsUseCase(station_repo)
+                stations = search_use_case.execute_by_postal_code(postal_code)
                 
-                # Create map with ALL stations as pins
-                stations_with_coords = [s for s in stations if s.latitude and s.longitude]
-                
-                if stations_with_coords:
-                    st.subheader("📍 Station Locations Map")
-                    
-                    # Calculate bounds to fit all stations
-                    lats = [s.latitude for s in stations_with_coords]
-                    lons = [s.longitude for s in stations_with_coords]
-                    
-                    # Center of all stations
-                    center_lat = sum(lats) / len(lats)
-                    center_lon = sum(lons) / len(lons)
-                    
-                        # CREATE MAP (USE MY NEW CODE HERE)
-                    m = folium.Map(location=[center_lat, center_lon], zoom_start=13)
-    
-                    for station in stations_with_coords:
-                    
-                    # Create map centered on stations
-                     m = folium.Map(location=[center_lat, center_lon], zoom_start=13)
-                    
-                    # Add markers for each station
-                    for station in stations_with_coords:
-                        if station.status.value == "available":
-                            icon_color = "green"
-                            icon = "ok-sign"
-                        elif station.status.value == "defective":
-                            icon_color = "red"
-                            icon = "remove-sign"
-                        elif station.status.value == "in_use":
-                            icon_color = "blue"
-                            icon = "time"
-                        else:
-                            icon_color = "gray"
-                            icon = "question-sign"
-                        
-                        popup_text = f"""
-                        <b>{station.name}</b><br>
-                        Address: {station.address or 'N/A'}<br>
-                        Status: <b>{station.status.value.upper()}</b><br>
-                        ID: {station.station_id.value}
-                        """
-                        
-                        folium.Marker(
-                            location=[station.latitude, station.longitude],
-                            popup=popup_text,
-                            icon=folium.Icon(color=icon_color)
-                        ).add_to(m)
-                    
-                    # Display the map
-                    map_html = m._repr_html_()
-                    st.components.v1.html(map_html, height=400)
-                    st.caption(f"🗺️ Showing {len(stations_with_coords)} stations | 🟢 Available | 🔴 Defective | 🔵 In Use")
+                if not stations:
+                    st.warning(f"⚠️ No charging stations found in postal code {postal_code}")
                 else:
-                    st.warning("⚠️ No GPS coordinates available for stations in this area")
-                
-                st.divider()
-                st.subheader("📋 Station Details")
-                
-                # Display stations as expandable cards
-                for i, station in enumerate(stations, 1):
-                    with st.expander(f"📍 {station.name}", expanded=i<=3):
-                        col_a, col_b = st.columns([2, 1])
+                    st.success(f"✅ Found {len(stations)} charging station(s) in {postal_code}")
+                    
+                    # Create map with ALL stations as pins
+                    stations_with_coords = [s for s in stations if s.latitude and s.longitude]
+                    
+                    if stations_with_coords:
+                        st.subheader("📍 Station Locations Map")
                         
-                        with col_a:
-                            st.write(f"**Station ID:** {station.station_id.value}")
-                            st.write(f"**Address:** {station.address or 'N/A'}")
-                            st.write(f"**Postal Code:** {station.postal_code}")
+                        # Calculate bounds to fit all stations
+                        lats = [s.latitude for s in stations_with_coords]
+                        lons = [s.longitude for s in stations_with_coords]
+                        
+                        # Center of all stations
+                        center_lat = sum(lats) / len(lats)
+                        center_lon = sum(lons) / len(lons)
+                        
+                        # Create map
+                        m = folium.Map(location=[center_lat, center_lon], zoom_start=13)
+                        
+                        # Add markers for each station
+                        for station in stations_with_coords:
+                            if station.status.value == "available":
+                                icon_color = "green"
+                                icon = "ok-sign"
+                            elif station.status.value == "defective":
+                                icon_color = "red"
+                                icon = "remove-sign"
+                            elif station.status.value == "in_use":
+                                icon_color = "blue"
+                                icon = "time"
+                            else:
+                                icon_color = "gray"
+                                icon = "question-sign"
                             
-                            # Status with color coding
-                            status = station.status.value
-                            if status == "available":
-                                st.success(f"🟢 Status: AVAILABLE")
-                            elif status == "in_use":
-                                st.info(f"🔵 Status: IN USE")
-                            elif status == "defective":
-                                st.error(f"🔴 Status: DEFECTIVE")
-                            else:
-                                st.warning(f"🟡 Status: {status.upper()}")
+                            popup_text = f"""
+                            <b>{station.name}</b><br>
+                            Address: {station.address or 'N/A'}<br>
+                            Status: <b>{station.status.value.upper()}</b><br>
+                            ID: {station.station_id.value}
+                            """
+                            
+                            folium.Marker(
+                                location=[station.latitude, station.longitude],
+                                popup=popup_text,
+                                icon=folium.Icon(color=icon_color)
+                            ).add_to(m)
                         
-                        with col_b:
-                            # Individual station map
-                            if station.latitude and station.longitude:
-                                mini_map = folium.Map(
-                                    location=[station.latitude, station.longitude],
-                                    zoom_start=15
-                                )
-                                folium.Marker(
-                                  [station.latitude, station.longitude],
-                                  popup=station.name
-                                ).add_to(mini_map)
-                                mini_html = mini_map._repr_html_()
-                                st.components.v1.html(mini_html, height=200)
-                            else:
-                                st.info("📍 GPS not available")
+                        # Display the map
+                        map_html = m._repr_html_()
+                        st.components.v1.html(map_html, height=400)
+                        st.caption(f"🗺️ Showing {len(stations_with_coords)} stations | 🟢 Available | 🔴 Defective | 🔵 In Use")
+                    else:
+                        st.warning("⚠️ No GPS coordinates available for stations in this area")
+                    
+                    st.divider()
+                    st.subheader("📋 Station Details")
+                    
+                    # Display stations as expandable cards
+                    for i, station in enumerate(stations, 1):
+                        with st.expander(f"📍 {station.name}", expanded=i<=3):
+                            col_a, col_b = st.columns([2, 1])
+                            
+                            with col_a:
+                                st.write(f"**Address:** {station.address or 'Berlin'}")
+                                st.write(f"**Postal Code:** {station.postal_code}")
+                                st.write(f"**Station ID:** {station.station_id.value}")
+                                
+                                if station.latitude and station.longitude:
+                                    st.write(f"**Coordinates:** {station.latitude:.4f}, {station.longitude:.4f}")
+                            
+                            with col_b:
+                                # Status indicator
+                                if station.status.value == "available":
+                                    st.success("🟢 **AVAILABLE**")
+                                    st.caption("Ready to charge")
+                                elif station.status.value == "defective":
+                                    st.error("🔴 **DEFECTIVE**")
+                                    st.caption("Under maintenance")
+                                elif station.status.value == "in_use":
+                                    st.info("🔵 **IN USE**")
+                                    st.caption("Currently charging")
+                                
+                                        
+            except ValueError as e:
+                # PostalCode validation errors (from value object)
+                st.error(f"❌ {str(e)}")
 
 # ============================================================================
-# PAGE 2: REPORT MALFUNCTION (Public) - IMPROVED
+# PAGE 2: REPORT MALFUNCTION (Public)
 # ============================================================================
 elif page == "📢 Report Issue":
-    st.title("📢 Report Charging Station Malfunction")
-    st.markdown("Help us maintain the network by reporting issues")
+    st.title("📢 Report Station Malfunction")
+    st.markdown("Help us maintain the charging network by reporting issues")
     
-    # Step 1: Search by Postal Code
-    st.subheader("1️⃣ Find Your Station")
+    # Step 1: Find station by postal code
+    st.subheader("🔍 Step 1: Find Your Station")
     
     col1, col2 = st.columns([3, 1])
     with col1:
-        search_postal = st.text_input(
-            "Enter Postal Code where the station is located",
-            placeholder="e.g., 10115",
-            key="report_postal_search"
+        postal_input = st.text_input(
+            "Enter Postal Code",
+            value=st.session_state.selected_postal_code or "",
+            placeholder="e.g., 10115, 10178",
+            help="Enter the postal code where the station is located"
         )
     
     with col2:
         find_button = st.button("🔍 Find Stations", use_container_width=True)
     
-    # When postal code is searched
-    if find_button and search_postal:
-        if search_postal.isdigit() and len(search_postal) == 5:
-            stations_in_area = station_repo.find_by_postal_code(search_postal)
-            if stations_in_area:
-                st.session_state.selected_postal_code = search_postal
-                st.success(f"✅ Found {len(stations_in_area)} station(s)")
-            else:
-                st.warning(f"⚠️ No stations found in {search_postal}")
-                st.session_state.selected_postal_code = None
-        else:
-            st.error("❌ Invalid postal code")
+    available_stations = []
     
-    # Step 2: If postal code found, show station selection
-    if st.session_state.selected_postal_code:
-        st.divider()
-        st.subheader("2️⃣ Select the Specific Station")
-        
-        stations_in_area = station_repo.find_by_postal_code(st.session_state.selected_postal_code)
-        
-        # Create dropdown with station names
-        station_options = {
-            f"{s.name} - {s.address or 'Berlin'}": s.station_id.value 
-            for s in stations_in_area
-        }
-        
-        selected_display = st.selectbox(
-            "Which specific station has the issue?",
-            options=list(station_options.keys()),
-            help="Select the exact station where you experienced a problem"
-        )
-        
-        selected_id = station_options[selected_display]
-        st.session_state.selected_station_id = selected_id
-        current_station = station_repo.find_by_id(StationId(selected_id))
-        
-        # Show selected station details
-        col_detail1, col_detail2 = st.columns([1, 1])
-        
-        with col_detail1:
-            with st.container(border=True):
-                st.write("**📍 Selected Station**")
-                st.write(f"**Name:** {current_station.name}")
-                st.write(f"**Address:** {current_station.address or 'Berlin'}")
-                st.write(f"**Station ID:** {current_station.station_id.value}")
-                st.write(f"**Current Status:** {current_station.status.value.upper()}")
-        
-        with col_detail2:
-            if current_station.latitude and current_station.longitude:
-                detail_map = folium.Map(
-                    location=[current_station.latitude, current_station.longitude],
-                    zoom_start=15
-                )
-                folium.Marker(
-                    [current_station.latitude, current_station.longitude],
-                    popup=current_station.name,
-                    icon=folium.Icon(color='red', icon='exclamation-sign')
-                ).add_to(detail_map)
-                detail_html = detail_map._repr_html_()
-                st.components.v1.html(detail_html, height=250)
-        
-        # Step 3: Report Form
-        st.divider()
-        st.subheader("3️⃣ Describe the Issue")
-        
-        with st.form("malfunction_form"):
-            # Malfunction type with icons
-            malfunction_icons = {
-                MalfunctionType.NOT_CHARGING: "⚡ Not Charging",
-                MalfunctionType.PAYMENT_FAILURE: "💳 Payment Failure",
-                MalfunctionType.PAYMENT_NOT_REFLECTED: "💰 Payment Not Reflected",
-                MalfunctionType.PHYSICAL_DAMAGE: "🔨 Physical Damage",
-                MalfunctionType.DISPLAY_MALFUNCTION: "🖥️ Display Malfunction",
-                MalfunctionType.CONNECTOR_ISSUE: "🔌 Connector Issue",
-                MalfunctionType.OTHER: "❓ Other"
-            }
-            
-            m_type = st.selectbox(
-                "What type of issue?",
-                options=list(MalfunctionType),
-                format_func=lambda x: malfunction_icons[x]
-            )
-            
-            description = st.text_area(
-                "Description (10-500 characters)",
-                placeholder="Please describe the issue in detail...",
-                help="Minimum 10 characters, maximum 500 characters",
-                max_chars=500
-            )
-            
-            # Character counter
-            if description:
-                char_count = len(description)
-                if char_count < 10:
-                    st.warning(f"⚠️ {10 - char_count} more characters needed")
+    if find_button or st.session_state.selected_postal_code:
+        if postal_input:
+            try:
+                # Use SearchStationsUseCase
+                search_use_case = SearchStationsUseCase(station_repo)
+                all_stations = search_use_case.execute_by_postal_code(postal_input)
+                
+                # Filter only operational (not already defective)
+                available_stations = [s for s in all_stations if s.is_operational]
+                
+                if not available_stations:
+                    st.warning(f"⚠️ No operational stations found in postal code {postal_input}")
                 else:
-                    st.success(f"✅ {char_count}/500 characters")
-            
-            email = st.text_input(
-                "Your Email (Optional)",
-                placeholder="email@example.com",
-                help="We'll notify you when the issue is resolved"
-            )
-            
-            submit = st.form_submit_button(
-                "🚀 Submit Report",
-                use_container_width=True,
-                type="primary"
-            )
-            
-            if submit:
-                try:
-                    # Submit through service (triggers validation)
-                    report_id = service.submit_malfunction_report(
-                        station_id=selected_id,
-                        malfunction_type=m_type,
-                        description=description,
-                        reported_by=email if email else None
-                    )
+                    st.success(f"✅ Found {len(available_stations)} operational station(s)")
+                    st.session_state.selected_postal_code = postal_input
                     
-                    # Process report (business rules)
-                    result = service.process_malfunction_report(report_id)
-                    
-                    if result.success:
-                        st.success(
-                            f"✅ **Report Submitted Successfully!**\n\n"
-                            f"Ticket ID: `{str(result.ticket_id)[:8]}...`\n\n"
-                            f"The station has been marked as defective and maintenance has been notified."
-                        )
-                        st.balloons()
-                        
-                        # Reset form
-                        st.session_state.selected_postal_code = None
-                        st.session_state.selected_station_id = None
+            except ValueError as e:
+                st.error(f"❌ {str(e)}")
+        else:
+            st.info("👆 Enter a postal code to find stations")
+    
+    # Step 2: Select station and report issue
+    if available_stations or st.session_state.selected_postal_code:
+        st.divider()
+        st.subheader("⚠️ Step 2: Report the Issue")
+        
+        # If we have stations, show the form
+        if available_stations:
+            with st.form("malfunction_report_form"):
+                st.write("**Select Station and Describe the Problem**")
+                
+                # Station selection
+                station_options = {
+                    f"{s.name} - {s.address or 'Berlin'} ({s.station_id.value})": s.station_id.value 
+                    for s in available_stations
+                }
+                
+                # Pre-select if coming from search page
+                default_index = 0
+                if st.session_state.selected_station_id:
+                    try:
+                        matching_keys = [k for k, v in station_options.items() 
+                                       if v == st.session_state.selected_station_id]
+                        if matching_keys:
+                            default_index = list(station_options.keys()).index(matching_keys[0])
+                    except:
+                        pass
+                
+                selected_station = st.selectbox(
+                    "Select Station",
+                    options=list(station_options.keys()),
+                    index=default_index,
+                    help="Choose the station with the malfunction"
+                )
+                
+                selected_id = station_options[selected_station]
+                
+                # Malfunction type
+                m_type = st.selectbox(
+                    "Malfunction Type",
+                    options=[
+                        MalfunctionType.NOT_CHARGING,
+                        MalfunctionType.PAYMENT_FAILURE,
+                        MalfunctionType.CONNECTOR_ISSUE,
+                        MalfunctionType.PHYSICAL_DAMAGE,
+                        MalfunctionType.DISPLAY_MALFUNCTION,
+                        MalfunctionType.OTHER
+                    ],
+                    format_func=lambda x: x.value.replace('_', ' ').title(),
+                    help="Select the type of issue you're experiencing"
+                )
+                
+                # Description
+                description = st.text_area(
+                    "Description (10-500 characters)",
+                    placeholder="Please describe the issue in detail...",
+                    help="Minimum 10 characters, maximum 500 characters",
+                    max_chars=500
+                )
+                
+                # Character counter
+                if description:
+                    char_count = len(description)
+                    if char_count < 10:
+                        st.warning(f"⚠️ {10 - char_count} more characters needed")
                     else:
-                        st.error(
-                            f"❌ **Validation Failed**\n\n" +
-                            "\n".join(f"- {error}" for error in result.errors)
+                        st.success(f"✅ {char_count}/500 characters")
+                
+                email = st.text_input(
+                    "Your Email (Optional)",
+                    placeholder="email@example.com",
+                    help="We'll notify you when the issue is resolved"
+                )
+                
+                submit = st.form_submit_button(
+                    "🚀 Submit Report",
+                    use_container_width=True,
+                    type="primary"
+                )
+                
+                if submit:
+                    try:
+                        # Use the CreateMalfunctionReportUseCase (proper DDD architecture)
+                        create_use_case = CreateMalfunctionReportUseCase(service)
+                        
+                        request = CreateReportRequest(
+                            station_id=selected_id,
+                            malfunction_type=m_type,
+                            description=description,
+                            reported_by=email if email else None
                         )
                         
-                except ValueError as e:
-                    st.error(f"⚠️ **Validation Error:** {str(e)}")
-    else:
-        st.info("👆 Enter a postal code above to find stations in that area")
+                        result = create_use_case.execute(request)
+                        
+                        if result.success:
+                            st.success(
+                                f"✅ **Report Submitted Successfully!**\n\n"
+                                f"Ticket ID: `{result.ticket_id[:8]}...`\n\n"
+                                f"The station has been marked as defective and maintenance has been notified."
+                            )
+                            st.balloons()
+                            
+                            # Reset form
+                            st.session_state.selected_postal_code = None
+                            st.session_state.selected_station_id = None
+                        else:
+                            st.error(
+                                f"❌ **Validation Failed**\n\n" +
+                                "\n".join(f"- {error}" for error in result.errors)
+                            )
+                            
+                    except ValueError as e:
+                        st.error(f"⚠️ **Validation Error:** {str(e)}")
+        else:
+            st.info("👆 Enter a postal code above to find stations in that area")
 
 # ============================================================================
 # PAGE 3: OPERATOR DASHBOARD (Login Required)
@@ -499,11 +485,20 @@ elif page == "👷 Operator Dashboard":
                             type="primary"
                         ):
                             if report.ticket_id:
-                                service.resolve_malfunction(
-                                    ticket_id=report.ticket_id,
+                                # Use the ResolveMalfunctionUseCase (proper DDD architecture)
+                                resolve_use_case = ResolveMalfunctionUseCase(service)
+                                
+                                request = ResolveReportRequest(
+                                    ticket_id=str(report.ticket_id),
                                     operator_notes=operator_notes or "Issue resolved by operator"
                                 )
-                                st.success("✅ Ticket resolved! Station restored to available.")
-                                st.rerun()
+                                
+                                response = resolve_use_case.execute(request)
+                                
+                                if response.success:
+                                    st.success(f"✅ {response.message}")
+                                    st.rerun()
+                                else:
+                                    st.error(f"❌ {response.message}")
         
         st.divider()
