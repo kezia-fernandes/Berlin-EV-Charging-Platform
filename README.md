@@ -1,14 +1,7 @@
-
 # ⚡ Berlin EV Charging Network
 
 A production-ready, Domain-Driven Design (DDD) platform for discovering 1,989+ EV charging stations across Berlin and managing station malfunctions with real-time monitoring.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://berlin-ev-charging-platform-kdxxuctnz8adrhvikxqey7.streamlit.app/)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-25%20passing-success.svg)](./contexts/)
-[![DDD](https://img.shields.io/badge/architecture-DDD-orange.svg)](https://en.wikipedia.org/wiki/Domain-driven_design)
-
----
 
 ## 🚀 Live Demo
 
@@ -73,10 +66,9 @@ Berlin-EV-Charging-Platform/
 │   │   │   └── repositories/        # IStationRepository (Interface)
 │   │   ├── application/
 │   │   │   └── use_cases/           # SearchStationsUseCase
-│   │   ├── infrastructure/
-│   │   │   ├── data/                # LadesaeulenregisterLoader (CSV)
-│   │   │   └── repositories/        # InMemoryStationRepository
-│   │   └── tests/                   # 13 passing tests
+│   │   └── infrastructure/
+│   │       ├── data/                # LadesaeulenregisterLoader (CSV)
+│   │       └── repositories/        # InMemoryStationRepository
 │   │
 │   ├── reporting/                    # 🛠️ Malfunction Reporting Bounded Context
 │   │   ├── domain/
@@ -86,279 +78,261 @@ Berlin-EV-Charging-Platform/
 │   │   │   └── exceptions/          # StationNotFound, InvalidReport
 │   │   ├── application/
 │   │   │   └── use_cases/           # Report submission workflows
-│   │   ├── infrastructure/
-│   │   │   └── repositories/        # InMemoryReportRepository
-│   │   └── tests/                   # 12 passing tests
+│   │   └── infrastructure/
+│   │       └── repositories/        # InMemoryReportRepository
 │   │
 │   └── shared_kernel/                # 🔗 Shared Concepts
 │       ├── common/                   # StationId (Value Object)
 │       └── datasets/                 # Ladesaeulenregister.csv (1,989 stations)
 │
+├── tests/                            # ✅ Centralized Test Suite (75 tests, 92% coverage)
+│   ├── conftest.py                  # Shared fixtures
+│   ├── discovery/
+│   │   ├── domain/                  # Entity & Value Object tests
+│   │   ├── application/             # Use case tests
+│   │   └── infrastructure/          # Repository & CSV loader tests
+│   ├── reporting/
+│   │   ├── domain/                  # Entity, Service & Exception tests
+│   │   ├── application/             # Use case workflow tests
+│   │   └── infrastructure/          # Repository tests
+│   └── shared_kernel/               # Shared value object tests
+│
 ├── presentation/
 │   └── app.py                        # 🎨 Streamlit UI (Multi-page app)
 │
+├── pytest.ini                        # Test configuration
 ├── requirements.txt                  # 📦 Dependencies
-├── pytest.ini                        # 🧪 Test configuration
-└── README.md                         # 📖 You are here
+└── README.md                         # 📖 This file
 ```
 
-### 🎯 Key Design Patterns
+### 🎯 Key DDD Patterns
 
-| Pattern | Purpose | Implementation |
-|---------|---------|----------------|
-| **Bounded Contexts** | Separates station discovery from malfunction reporting | `contexts/discovery/` vs `contexts/reporting/` |
-| **Entities** | Business objects with identity | `OperationalStation`, `MalfunctionReport` |
-| **Value Objects** | Immutable domain concepts | `StationId`, `StationStatus`, `MalfunctionType` |
-| **Repository Pattern** | Abstracts data persistence | `IStationRepository`, `InMemoryStationRepository` |
-| **Domain Services** | Complex business workflows | `MalfunctionReportService` |
-| **Layered Architecture** | Dependency inversion | Domain ← Application ← Infrastructure ← Presentation |
-| **Use Cases** | Application-specific business rules | `SearchStationsUseCase` |
+- **Bounded Contexts**: Discovery and Reporting are isolated, maintaining their own models
+- **Aggregates**: OperationalStation and MalfunctionReport are aggregate roots
+- **Value Objects**: StationId, PostalCode, StationStatus ensure immutability and validation
+- **Repository Pattern**: Abstract data access through interfaces (IStationRepository, IReportRepository)
+- **Domain Services**: MalfunctionReportService coordinates cross-aggregate operations
+- **Use Cases**: Clear application layer orchestrating domain logic
+- **Shared Kernel**: StationId is shared between contexts for integration
 
 ---
 
 ## 🧪 Testing
 
-The project maintains **100% test coverage** of domain logic with **25 passing tests**:
+### Test Coverage: 92% 🎉
 
 ```bash
 # Run all tests
-pytest contexts/
+pytest tests/
 
 # Run with coverage report
-pytest --cov=contexts --cov-report=html contexts/
+pytest tests/ --cov=contexts --cov-report=html
 
 # Run specific context tests
-pytest contexts/discovery/tests/         # 13 tests
-pytest contexts/reporting/tests/         # 12 tests
-pytest contexts/shared_kernel/tests/     # Shared tests
-
-# Run with verbose output
-pytest -v contexts/
-
-# Run specific test file
-pytest contexts/discovery/tests/test_operational_station.py -v
+pytest tests/discovery/
+pytest tests/reporting/
 ```
 
-### Test Coverage
-- ✅ **Domain Entities**: Station and Report lifecycle
-- ✅ **Value Objects**: StationId uniqueness, Status transitions
-- ✅ **Business Rules**: Validation, constraints, invariants
-- ✅ **Repository Operations**: CRUD, filtering, state management
-- ✅ **Integration Flows**: End-to-end reporting workflow
-- ✅ **Edge Cases**: Invalid inputs, duplicate reports, missing stations
+### Test Statistics
+- **75 passing tests** across all layers
+- **92% code coverage** (457 statements, 36 missed)
+- **Domain layer**: 96-100% coverage
+- **Application layer**: 71-96% coverage
+- **Infrastructure layer**: 93-100% coverage
 
 ---
 
-## 🛠️ Tech Stack
-
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **Python** | Backend language | 3.10+ |
-| **Streamlit** | Web framework & UI | 1.40.0 |
-| **Folium** | Interactive maps | 0.15.0 |
-| **Pandas** | Data processing | 2.2.0+ |
-| **Pytest** | Testing framework | 7.4.0 |
-| **UUID** | Unique ID generation | stdlib |
-
----
-
-## 📦 Installation & Local Setup
+## 🚀 Installation & Setup
 
 ### Prerequisites
 - Python 3.10 or higher
-- pip (Python package manager)
-- Git
+- pip package manager
 
-### Step-by-Step Setup
+### Quick Start
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/kezia-fernandes/Berlin-EV-Charging-Platform.git
-cd Berlin-EV-Charging-Platform
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Berlin-EV-Charging-Platform.git
+   cd Berlin-EV-Charging-Platform
+   ```
 
-# 2. (Optional) Create a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# 3. Install dependencies
-pip install -r requirements.txt
+3. **Run tests**
+   ```bash
+   pytest tests/
+   ```
 
-# 4. Run tests to verify setup
-pytest contexts/
+4. **Start the application**
+   ```bash
+   streamlit run presentation/app.py
+   ```
 
-# 5. Launch the application
-streamlit run presentation/app.py
+5. **Access the app**
+   - Open browser: `http://localhost:8501`
+   - For operator dashboard, use credentials: `operator` / `berlin2025`
+
+---
+
+## 📦 Dependencies
+
+### Core Framework
+- **streamlit** (1.28.0): Web application framework
+- **pandas** (2.1.1): Data manipulation and analysis
+
+### Mapping & Visualization
+- **folium** (0.14.0): Interactive maps
+- **streamlit-folium** (0.15.0): Folium integration for Streamlit
+
+### Testing
+- **pytest** (7.4.2): Testing framework
+- **pytest-cov** (4.1.0): Coverage reporting
+
+---
+
+## 💡 Usage Examples
+
+### Searching for Stations
+```python
+from contexts.discovery.application.use_cases.search_stations_use_case import SearchStationsUseCase
+from contexts.discovery.infrastructure.repositories.in_memory_station_repository import InMemoryStationRepository
+
+# Initialize
+repository = InMemoryStationRepository()
+use_case = SearchStationsUseCase(repository)
+
+# Search by postal code
+stations = use_case.execute(postal_code="10115")
+for station in stations:
+    print(f"{station.name} - {station.address}")
 ```
 
-The app will automatically open at `http://localhost:8501` 🎉
+### Reporting a Malfunction
+```python
+from contexts.reporting.application.use_cases.create_malfunction_report_use_case import CreateMalfunctionReportUseCase
+from contexts.reporting.domain.enums.malfunction_type import MalfunctionType
+
+# Create report
+use_case = CreateMalfunctionReportUseCase(report_repository, station_repository)
+report = use_case.execute(
+    station_id="BERLIN-10115-0001",
+    description="Charging cable damaged, unable to connect",
+    malfunction_type=MalfunctionType.CABLE_CONNECTOR_DAMAGE
+)
+print(f"Report created: {report.report_id}")
+```
 
 ---
 
 ## 📊 Data Source
 
-Station data sourced from **Bundesnetzagentur** (German Federal Network Agency):
-
-- **Dataset**: Ladesäulenregister (EV Charging Station Registry)
-- **Coverage**: 1,989 stations across all Berlin postal codes
-- **Attributes**:
-  - GPS coordinates (latitude, longitude)
-  - Full addresses and postal codes
-  - Station operator information
-  - Installation dates
-- **Update Frequency**: Government maintains official registry
-- **License**: Public domain government data
+This project uses the **German Ladesäulenregister** (Charging Station Registry):
+- **Source**: Bundesnetzagentur (Federal Network Agency)
+- **Berlin Stations**: 1,989 registered charging locations
+- **Data Fields**: Location, postal code, operator, coordinates
+- **Update Frequency**: Government database (periodic updates)
 
 ---
 
-## 🎯 User Journeys
+## 🎨 UI Features
 
-### 🙋 **For Public Users**
+### Station Discovery Page
+- 🔍 Postal code search with validation (Berlin codes only: 10xxx-14xxx)
+- 🗺️ Interactive cluster maps with station markers
+- 📍 Individual station maps with detailed info
+- 🚦 Real-time status indicators
+- 📱 Responsive design for mobile devices
 
-1. **Find Charging Stations**
-   - Enter Berlin postal code (e.g., 10115, 10178, 12345)
-   - View interactive map with all stations in that area
-   - Click any station to see detailed information
-   - Check real-time availability status
+### Malfunction Reporting Page
+- 📝 4-step guided reporting workflow:
+  1. Station ID input with validation
+  2. Malfunction type selection (6 categories)
+  3. Detailed description (10-500 characters)
+  4. Confirmation with unique ticket ID
+- ✅ Input validation at each step
+- 🎫 Automatic ticket generation
+- 🔄 Instant status updates
 
-2. **Report Malfunctions**
-   - Navigate to "Report Issue" page
-   - Enter Station ID from physical station label
-   - Select malfunction type from dropdown
-   - Describe the issue in detail
-   - Receive confirmation with ticket ID
-   - Station automatically marked as "Defective"
-
-### 👨‍💼 **For Network Operators**
-
-1. **Login to Dashboard**
-   - Navigate to "Operator Dashboard"
-   - Enter credentials (demo: operator/berlin2025)
-   - Access secure operator interface
-
-2. **Monitor Network Health**
-   - View total station count (1,989)
-   - Track active malfunction reports
-   - Identify defective stations
-   - Monitor resolution metrics
-
-3. **Resolve Issues**
-   - Review all open tickets with details
-   - Inspect station ID, malfunction type, and description
-   - Click "Resolve" after fixing the issue
-   - Station automatically restored to "Available"
-   - Ticket marked as "Resolved"
+### Operator Dashboard
+- 🔐 Secure authentication
+- 📊 Real-time KPI dashboard:
+  - Total network stations
+  - Active malfunction reports
+  - Defective stations count
+- 📋 Ticket management interface
+- 🔧 One-click issue resolution
+- 📈 Network health monitoring
 
 ---
 
-## 🚀 Deployment
+## 🛠️ Technology Stack
 
-The application is deployed on **Streamlit Community Cloud**:
-
-### Deployment Configuration
-
-```toml
-# .streamlit/config.toml
-[theme]
-primaryColor = "#FF4B4B"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
-font = "sans serif"
-
-[server]
-headless = true
-port = 8501
-```
-
-### Environment Variables
-- No secrets required for public demo
-- In production, store operator credentials in Streamlit secrets
-
-### Continuous Deployment
-- Automatic deployment on `git push` to `main` branch
-- GitHub integration via Streamlit Cloud dashboard
+- **Language**: Python 3.10+
+- **Web Framework**: Streamlit
+- **Architecture**: Domain-Driven Design (DDD)
+- **Testing**: pytest, pytest-cov
+- **Data Processing**: pandas
+- **Mapping**: Folium, streamlit-folium
+- **Deployment**: Streamlit Cloud
 
 ---
 
-## 🔮 Future Enhancements
+## 🧩 Domain-Driven Design Implementation
 
-- [ ] **Real Database**: Replace in-memory repos with PostgreSQL/MongoDB
-- [ ] **User Authentication**: Full user registration and role-based access
-- [ ] **Real-time Updates**: WebSocket integration for live status changes
-- [ ] **Mobile App**: React Native companion app
-- [ ] **Email Notifications**: Alert operators of new reports
-- [ ] **Analytics Dashboard**: Historical trends and usage patterns
-- [ ] **Multi-language Support**: German and English interfaces
-- [ ] **Route Planning**: Navigate to nearest available station
-- [ ] **Payment Integration**: Reserve and pay for charging sessions
-- [ ] **API Gateway**: RESTful API for third-party integrations
+### Bounded Contexts
+1. **Discovery Context**: Handles station search and availability
+2. **Reporting Context**: Manages malfunction reports and tickets
 
----
+### Aggregates
+- **OperationalStation** (Discovery): Single aggregate, no child entities
+- **MalfunctionReport** (Reporting): Single aggregate, no child entities
 
-## 🤝 Contributing
+### Value Objects
+- **StationId**: Immutable identifier shared across contexts
+- **PostalCode**: Berlin-specific validation (10xxx-14xxx)
+- **StationStatus**: Enum (Available, Defective, InUse, Maintenance)
+- **ReportStatus**: Enum (Submitted, Validated, TicketCreated, Resolved)
+- **MalfunctionType**: Enum (6 categories of station issues)
+- **ReportDescription**: Validated text (10-500 characters)
 
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Write tests for new functionality
-4. Ensure all tests pass (`pytest contexts/`)
-5. Commit your changes (`git commit -m 'Add AmazingFeature'`)
-6. Push to the branch (`git push origin feature/AmazingFeature`)
-7. Open a Pull Request
-
-### Code Standards
-- Follow PEP 8 style guidelines
-- Maintain test coverage above 90%
-- Document all public methods and classes
-- Use type hints for function signatures
+### Integration Patterns
+- **Customer-Supplier**: Reporting context depends on Discovery context
+- **Shared Kernel**: StationId value object shared between contexts
+- **Repository Pattern**: Abstract data access for testability
+- **Use Cases**: Clear application layer boundaries
 
 ---
 
-## 📄 License
+## 🎓 Academic Project Details
 
-This project is open source and available under the [MIT License](LICENSE).
+This project was developed as part of an Advanced Software Engineering course, demonstrating:
+
+✅ **Domain-Driven Design** principles
+✅ **Clean Architecture** with clear layer separation
+✅ **Test-Driven Development** (92% coverage)
+✅ **SOLID Principles** implementation
+✅ **Value Objects** for domain validation
+✅ **Repository Pattern** for data abstraction
+✅ **Use Case Pattern** for application logic
+✅ **Bounded Contexts** for domain isolation
 
 ---
 
+## 📝 License
+
+This project is developed for educational purposes.
+
+---
 
 ## 🙏 Acknowledgments
 
-- **Data Source**: Bundesnetzagentur (German Federal Network Agency)
-- **DDD Inspiration**: Eric Evans' "Domain-Driven Design" book
-- **Framework**: Streamlit for rapid prototyping
-- **Deployment**: Streamlit Community Cloud for free hosting
-- **Community**: Thanks to all contributors and users!
+- **Bundesnetzagentur** for providing the Ladesäulenregister dataset
+- **Streamlit** for the excellent web framework
+- **Course Instructors** for guidance on DDD principles
 
 ---
 
-## 📸 Screenshots
-
-### Station Search
-![Station Search](https://via.placeholder.com/800x400?text=Station+Search+Interface)
-
-### Malfunction Reporting
-![Report Issue](https://via.placeholder.com/800x400?text=Malfunction+Reporting)
-
-### Operator Dashboard
-![Dashboard](https://via.placeholder.com/800x400?text=Operator+Dashboard)
-
----
-
-## 📞 Support
-
-- 📖 **Documentation**: Check this README
-- 🐛 **Bug Reports**: [Open an issue](https://github.com/kezia-fernandes/Berlin-EV-Charging-Platform/issues)
-- 💡 **Feature Requests**: [Start a discussion](https://github.com/kezia-fernandes/Berlin-EV-Charging-Platform/discussions)
-
----
-
-<div align="center">
-
-**⭐ Star this repository if you find it helpful!**
-
-Made with ❤️ and ☕ in Berlin
-
-[🔗 Live Demo](https://berlin-ev-charging-platform-kdxxuctnz8adrhvikxqey7.streamlit.app/) • [📖 Documentation](./docs/) • [🐛 Report Bug](https://github.com/kezia-fernandes/Berlin-EV-Charging-Platform/issues)
-
-</div>
+**⚡ Built with passion for sustainable urban mobility! 🌱**
