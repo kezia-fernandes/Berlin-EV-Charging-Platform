@@ -1,0 +1,80 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-7.4.3, pluggy-1.6.0
+rootdir: /mnt/d/Advanced_Software/Berlin-EV-Charging-Platform
+configfile: pytest.ini
+testpaths: tests
+plugins: cov-4.1.0
+collected 75 items
+
+tests/discovery/application/test_search_stations_use_case.py ........... [ 14%]
+..                                                                       [ 17%]
+tests/discovery/domain/test_operational_station.py ...                   [ 21%]
+tests/discovery/infrastructure/test_ladesaeulenregister_loader.py ...... [ 29%]
+..                                                                       [ 32%]
+tests/discovery/infrastructure/test_repositories.py ....                 [ 37%]
+tests/reporting/application/test_create_malfunction_report_use_case.py . [ 38%]
+.......                                                                  [ 48%]
+tests/reporting/application/test_resolve_malfunction_use_case.py ....... [ 57%]
+                                                                         [ 57%]
+tests/reporting/domain/test_enums.py ..                                  [ 60%]
+tests/reporting/domain/test_malfunction_report.py ..                     [ 62%]
+tests/reporting/domain/test_malfunction_service.py ...                   [ 66%]
+tests/reporting/domain/test_value_objects.py ....                        [ 72%]
+tests/reporting/infrastructure/test_repositories.py ..                   [ 74%]
+tests/shared_kernel/test_postal_code.py ..............                   [ 93%]
+tests/shared_kernel/test_station_id.py .....                             [100%]
+
+---------- coverage: platform linux, python 3.10.12-final-0 ----------
+Name                                                                             Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------------------------------------------------
+contexts/__init__.py                                                                 0      0   100%
+contexts/discovery/__init__.py                                                       0      0   100%
+contexts/discovery/application/__init__.py                                           0      0   100%
+contexts/discovery/application/use_cases/__init__.py                                 0      0   100%
+contexts/discovery/application/use_cases/search_stations_use_case.py                19      0   100%
+contexts/discovery/domain/__init__.py                                                0      0   100%
+contexts/discovery/domain/entities/__init__.py                                       0      0   100%
+contexts/discovery/domain/entities/operational_station.py                           49      2    96%   68, 76
+contexts/discovery/domain/repositories/__init__.py                                   0      0   100%
+contexts/discovery/domain/repositories/i_station_repository.py                      20      5    75%   13, 17, 21, 25, 29
+contexts/discovery/domain/value_objects/__init__.py                                  0      0   100%
+contexts/discovery/domain/value_objects/station_status.py                            6      0   100%
+contexts/discovery/infrastructure/__init__.py                                        0      0   100%
+contexts/discovery/infrastructure/data/__init__.py                                   0      0   100%
+contexts/discovery/infrastructure/data/ladesaeulenregister_loader.py                70      9    87%   18, 50, 67, 79-80, 85-86, 103-104
+contexts/discovery/infrastructure/repositories/__init__.py                           0      0   100%
+contexts/discovery/infrastructure/repositories/in_memory_station_repository.py      18      0   100%
+contexts/reporting/__init__.py                                                       0      0   100%
+contexts/reporting/application/__init__.py                                           0      0   100%
+contexts/reporting/application/dtos/__init__.py                                      0      0   100%
+contexts/reporting/application/dtos/create_report_dto.py                            25      1    96%   24
+contexts/reporting/application/dtos/resolve_report_dto.py                           15      0   100%
+contexts/reporting/application/use_cases/__init__.py                                 0      0   100%
+contexts/reporting/application/use_cases/create_malfunction_report_use_case.py      14      4    71%   34-42
+contexts/reporting/application/use_cases/resolve_malfunction_use_case.py            20      2    90%   55-56
+contexts/reporting/domain/__init__.py                                                0      0   100%
+contexts/reporting/domain/entities/__init__.py                                       0      0   100%
+contexts/reporting/domain/entities/malfunction_report.py                            54      2    96%   100, 114
+contexts/reporting/domain/enums/__init__.py                                          0      0   100%
+contexts/reporting/domain/enums/malfunction_type.py                                 11      1    91%   17
+contexts/reporting/domain/enums/report_status.py                                     8      0   100%
+contexts/reporting/domain/repositories/__init__.py                                   0      0   100%
+contexts/reporting/domain/repositories/i_report_repository.py                       18      4    78%   15, 20, 25, 30
+contexts/reporting/domain/services/__init__.py                                       0      0   100%
+contexts/reporting/domain/services/malfunction_report_service.py                    59      5    92%   90, 150, 155, 169-170
+contexts/reporting/domain/value_objects/__init__.py                                  0      0   100%
+contexts/reporting/domain/value_objects/report_description.py                       11      0   100%
+contexts/reporting/infrastructure/__init__.py                                        0      0   100%
+contexts/reporting/infrastructure/repositories/__init__.py                           0      0   100%
+contexts/reporting/infrastructure/repositories/in_memory_report_repository.py       16      0   100%
+contexts/shared_kernel/__init__.py                                                   0      0   100%
+contexts/shared_kernel/common/__init__.py                                            0      0   100%
+contexts/shared_kernel/common/postal_code.py                                        15      1    93%   32
+contexts/shared_kernel/common/station_id.py                                          9      0   100%
+contexts/shared_kernel/datasets/__init__.py                                          0      0   100%
+--------------------------------------------------------------------------------------------------------------
+TOTAL                                                                              457     36    92%
+Coverage HTML written to dir htmlcov
+
+
+============================= 75 passed in 13.25s ==============================
