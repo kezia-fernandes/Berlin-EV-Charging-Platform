@@ -1,6 +1,11 @@
+# Fix scripts (temporary development files)
+fix_imports.sh
+fix_streamlit_imports.py
+populate_reporting_complete.sh
 __pycache__/
 *.pyc
 .pytest_cache/
 venv/
 .coverage
 htmlcov/
+!docs/

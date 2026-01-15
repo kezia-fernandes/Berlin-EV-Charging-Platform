@@ -103,7 +103,8 @@ if page == "🔍 Search Stations":
         postal_code = st.text_input(
             "Enter Postal Code",
             placeholder="e.g., 10115, 10178, 10785",
-            help="Berlin postal codes start with 1"
+            help="Berlin postal codes start with 1",
+            key="postal_code_search"
         )
     
     with col2:
@@ -208,6 +209,32 @@ if page == "🔍 Search Stations":
             except ValueError as e:
                 # PostalCode validation errors (from value object)
                 st.error(f"❌ {str(e)}")
+    
+    # Display default Berlin map if no search button was pressed
+    else:
+        if not postal_code:
+            st.info("🗺️ Enter a postal code to search for charging stations in that area")
+            
+            # Create default Berlin overview map
+            berlin_center = [52.5200, 13.4050]  # Berlin center coordinates
+            default_map = folium.Map(
+                location=berlin_center, 
+                zoom_start=11,
+                tiles='OpenStreetMap'
+            )
+            
+            # Add a marker for Berlin center
+            folium.Marker(
+                location=berlin_center,
+                popup="<b>Berlin City Center</b><br>Search by postal code to find charging stations",
+                icon=folium.Icon(color='blue', icon='info-sign')
+            ).add_to(default_map)
+            
+            # Display the map
+            st.subheader("📍 Berlin Overview Map")
+            map_html = default_map._repr_html_()
+            st.components.v1.html(map_html, height=400)
+            st.caption("🔍 Enter a postal code above to find charging stations in specific areas")
 
 # ============================================================================
 # PAGE 2: REPORT MALFUNCTION (Public)
