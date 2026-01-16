@@ -6,36 +6,37 @@ from contexts.discovery.infrastructure.repositories.in_memory_station_repository
 from contexts.shared_kernel.common.station_id import StationId
 
 
+@pytest.fixture
+def use_case():
+    """Setup use case with test data"""
+    repo = InMemoryStationRepository()
+    
+    stations = [
+        OperationalStation(
+            station_id=StationId("STATION-001"),
+            name="Alexanderplatz Station",
+            postal_code="10178"
+        ),
+        OperationalStation(
+            station_id=StationId("STATION-002"),
+            name="Mitte Station",
+            postal_code="10178"
+        ),
+        OperationalStation(
+            station_id=StationId("STATION-003"),
+            name="Kreuzberg Station",
+            postal_code="10785"
+        ),
+    ]
+    
+    for station in stations:
+        repo.save(station)
+    
+    return SearchStationsUseCase(repo)
+
+
 class TestSearchStationsUseCase:
     """Test suite for SearchStationsUseCase"""
-    
-    @pytest.fixture
-    def use_case(self):
-        """Setup use case with test data"""
-        repo = InMemoryStationRepository()
-        
-        stations = [
-            OperationalStation(
-                station_id=StationId("STATION-001"),
-                name="Alexanderplatz Station",
-                postal_code="10178"
-            ),
-            OperationalStation(
-                station_id=StationId("STATION-002"),
-                name="Mitte Station",
-                postal_code="10178"
-            ),
-            OperationalStation(
-                station_id=StationId("STATION-003"),
-                name="Kreuzberg Station",
-                postal_code="10785"
-            ),
-        ]
-        
-        for station in stations:
-            repo.save(station)
-        
-        return SearchStationsUseCase(repo)
     
     # ==================== HAPPY PATH ====================
     

@@ -1,5 +1,4 @@
 import pytest
-from uuid import uuid4
 from contexts.reporting.domain.services.malfunction_report_service import MalfunctionReportService
 from contexts.discovery.domain.entities.operational_station import OperationalStation
 from contexts.shared_kernel.common.station_id import StationId
