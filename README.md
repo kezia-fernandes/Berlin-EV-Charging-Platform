@@ -9,6 +9,8 @@ designed and implemented the application and its tests.
 **Live demo:** [berlin-ev-charging-platform.streamlit.app](https://berlin-ev-charging-platform-kdxxuctnz8adrhvikxqey7.streamlit.app/)
 Operator dashboard login (demo only): `operator` / `berlin2025`
 
+![Station search with map](docs/screenshot.png)
+
 ## What it does
 
 - **Station search.** Look up the 1,989 Berlin stations in the Bundesnetzagentur's
